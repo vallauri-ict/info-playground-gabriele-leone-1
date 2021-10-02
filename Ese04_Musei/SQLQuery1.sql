@@ -14,15 +14,28 @@ WHERE m.Citta='Londra'
 AND NOT EXISTS (SELECT * FROM Opere o 
 				WHERE o.NomeA='Tiziano' 
 				AND o.NomeM=m.NomeM) 
+-- Oppure
+SELECT *
+FROM Musei m
+WHERE m.Citta='Londra'
+AND 'Tiziano' NOT IN (SELECT o.NomeA
+					FROM Opere o
+					WHERE o.NomeM=m.NomeM)
 
-/* Il nome dei musei di Londra che hanno solo opere di Tiziano */
+/* 10. Il nome dei musei di Londra che hanno solo opere di Tiziano */
 SELECT m.NomeM 
 FROM Musei m
 WHERE m.Citta='Londra'
-AND EXISTS (SELECT * FROM Opere o 
-				WHERE o.NomeA='Tiziano' 
+AND NOT EXISTS (SELECT * FROM Opere o 
+				WHERE o.NomeA<>'Tiziano' 
 				AND o.NomeM=m.NomeM) 
-
+--oppuure
+SELECT *
+FROM Musei m
+WHERE m.Citta='Londra'
+AND 'Tiziano' = ALL (SELECT o.NomeA
+				FROM Opere o
+				WHERE o.NomeM=m.NomeM)
 
 /* 11. Per ciascun artista, il nome dell'artista ed il numero di sue opere conservate alla “Galleria
 degli Uffizi” */
@@ -39,16 +52,27 @@ WHERE o.NomeA=a.NomeA
 AND a.Nazionalita='IT'
 GROUP BY o.NomeM
 HAVING COUNT(*)>1
+-- oppure
+SELECT m.NomeM
+FROM Musei m
+WHERE 2<=(SELECT count(*)
+		FROM Opere o, Artisti a
+		WHERE o.NomeA=a.NomeA
+		AND a.Nazionalita='IT'
+		AND m.NomeM=o.NomeM)
+
 
 
 
 /* 13- Per le opere di artisti italiani che non hanno personaggi. il titolo dell’opera ed il nome
 dell'artista */
 SELECT a.NomeA, o.Titolo
-FROM Artisti a, Personaggi p, Opere o
+FROM Artisti a, Opere o
 WHERE a.Nazionalita='IT'
-AND p.Personaggio=NULL
-AND p.Codice=o.Codice AND a.NomeA=o.NomeA
+AND a.NomeA=o.NomeA
+AND NOT EXISTS (SELECT *
+				FROM Personaggi p
+				WHERE p.Codice=o.Codice)
 
 /* 14- Il nome dei musei di Londra che non conservano opere di artisti italiani, eccettuato Tiziano */
 SELECT *
@@ -68,3 +92,10 @@ FROM Artisti a, Opere o
 WHERE a.NomeA=o.NomeA
 GROUP BY o.NomeM,a.Nazionalita
 ORDER BY o.NomeM
+
+
+
+/* */
+UPDATE Artisti
+SET Nazionalita='ES'
+WHERE NomeA='Picasso'
